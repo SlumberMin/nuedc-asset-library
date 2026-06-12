@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-06-12T02:55:21.691358",
+  "summary": {
+    "total": 3,
+    "passed": 1,
+    "failed": 2,
+    "errors": 0,
+    "total_time_sec": 0.9691110999847297,
+    "avg_time_sec": 0.31328721110993585
+  },
+  "results": [
+    {
+      "name": "test_coverage_report.py",
+      "file": "D:\\Users\\Lie\\Desktop\\电赛\\电赛综合资产库\\tools\\test_coverage_report.py",
+      "type": "test",
+      "status": "pass",
+      "elapsed_sec": 0.42817239998839796,
+      "returncode": 0,
+      "stdout": "rt.c`\n- `complementary_filter.c`\n- `pid_v2.c`\n- `alert.c`\n- `motor_fixed.c`\n- `sensor.c`\n- `key.c`\n- `main.c`\n- `complementary_filter.c`\n- `pid_v2.c`\n- `main.c`\n- `main_v2.c`\n- `timer.c`\n- `alert.c`\n- `gimbal.c`\n- `key.c`\n- `tracking.c`\n- `vision.c`\n- `main.c`\n- `main.c`\n- `main.c`\n- `main.c`\n- `c_driver_template.c`\n- `python_simulation_template.py`\n- `python_test_template.py`\n\n## 改进建议\n\n2. 为 845 个未覆盖的源文件编写测试\n3. 61 个测试文件自行重写了算法逻辑，建议改为import wrappers.py中的生产代码封装（错误经验库 #9）\n\n\n错误模式覆盖: 9/9\n未测试源文件: 845\n",
+      "stderr": "",
+      "runs": 3,
+      "avg_sec": 0.3989229333334758,
+      "min_sec": 0.37751260001095943,
+      "max_sec": 0.42817239998839796
+    },
+    {
+      "name": "test_result_analyzer.py",
+      "file": "D:\\Users\\Lie\\Desktop\\电赛\\电赛综合资产库\\tools\\test_result_analyzer.py",
+      "type": "test",
+      "status": "fail",
+      "elapsed_sec": 0.5046567999816034,
+      "returncode": 2,
+      "stdout": "",
+      "stderr": "usage: test_result_analyzer.py [-h] --input INPUT [--output OUTPUT]\n                               [--spec SPEC]\n                               [--charts {line,bar,box,hist} [{line,bar,box,hist} ...]]\n                               [--report-only] [--title TITLE]\ntest_result_analyzer.py: error: the following arguments are required: --input/-i\n",
+      "runs": 1,
+      "avg_sec": 0.5046567999816034,
+      "min_sec": 0.5046567999816034,
+      "max_sec": 0.5046567999816034
+    },
+    {
+      "name": "motor_test.py",
+      "file": "D:\\Users\\Lie\\Desktop\\电赛\\电赛综合资产库\\tools\\motor_test.py",
+      "type": "test",
+      "status": "fail",
+      "elapsed_sec": 0.03628190001472831,
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "  File \"D:\\Users\\Lie\\Desktop\\电赛\\电赛综合资产库\\tools\\motor_test.py\", line 51\n    matplotlib.use('Agg')\n    ^^^^^^^^^^\nSyntaxError: expected 'except' or 'finally' block\n",
+      "runs": 1,
+      "avg_sec": 0.03628190001472831,
+      "min_sec": 0.03628190001472831,
+      "max_sec": 0.03628190001472831
+    }
+  ]
+}

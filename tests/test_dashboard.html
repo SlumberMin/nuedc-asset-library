@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电赛资产库测试仪表板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.total {
+            border-left: 5px solid #007bff;
+        }
+
+        .stat-card.passed {
+            border-left: 5px solid #28a745;
+        }
+
+        .stat-card.failed {
+            border-left: 5px solid #dc3545;
+        }
+
+        .stat-card.skipped {
+            border-left: 5px solid #ffc107;
+        }
+
+        .stat-card h2 {
+            font-size: 42px;
+            margin: 15px 0;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-card.total h2 {
+            color: #007bff;
+        }
+
+        .stat-card.passed h2 {
+            color: #28a745;
+        }
+
+        .stat-card.failed h2 {
+            color: #dc3545;
+        }
+
+        .stat-card.skipped h2 {
+            color: #ffc107;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .pie-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+        }
+
+        .progress-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .progress-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .progress-item {
+            margin-bottom: 20px;
+        }
+
+        .progress-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-item-header span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-item-header strong {
+            color: #333;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .progress-fill.high {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .progress-fill.medium {
+            background: linear-gradient(90deg, #ffc107, #fd7e14);
+        }
+
+        .progress-fill.low {
+            background: linear-gradient(90deg, #dc3545, #ff6b6b);
+        }
+
+        .table-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .table-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #343a40;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-badge.passed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.skipped {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .history-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .history-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .history-chart {
+            height: 250px;
+        }
+
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 12px;
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>电赛资产库测试仪表板</h1>
+            <p class="subtitle">Test Dashboard - 实时监控测试状态和覆盖率</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <p>总测试数</p>
+                <h2 id="totalTests">0</h2>
+            </div>
+            <div class="stat-card passed">
+                <p>通过</p>
+                <h2 id="passedTests">0</h2>
+            </div>
+            <div class="stat-card failed">
+                <p>失败</p>
+                <h2 id="failedTests">0</h2>
+            </div>
+            <div class="stat-card skipped">
+                <p>跳过</p>
+                <h2 id="skippedTests">0</h2>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>模块覆盖率柱状图</h3>
+                <div class="chart-container">
+                    <canvas id="coverageChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>测试结果分布</h3>
+                <div class="pie-container">
+                    <canvas id="testStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <h3>核心模块覆盖率</h3>
+            <div class="progress-item">
+                <div class="progress-item-header">
+                    <span>PID控制算法</span>
+                    <strong id="pidCoverage">0%</strong>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill high" id="pidProgress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item-header">
+                    <span>视觉处理算法</span>
+                    <strong id="visualCoverage">0%</strong>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill high" id="visualProgress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item-header">
+                    <span>传感器数据处理</span>
+                    <strong id="sensorCoverage">0%</strong>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill high" id="sensorProgress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item-header">
+                    <span>高级控制算法</span>
+                    <strong id="advancedCoverage">0%</strong>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill medium" id="advancedProgress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item-header">
+                    <span>性能基准测试</span>
+                    <strong id="benchmarkCoverage">0%</strong>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill high" id="benchmarkProgress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h3>性能基准结果</h3>
+            <table id="benchmarkTable">
+                <thead>
+                    <tr>
+                        <th>测试名称</th>
+                        <th>执行时间</th>
+                        <th>结果</th>
+                        <th>基准阈值</th>
+                    </tr>
+                </thead>
+                <tbody id="benchmarkBody">
+                    <!-- 动态填充 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="history-section">
+            <h3>历史测试趋势</h3>
+            <div class="history-chart">
+                <canvas id="historyChart"></canvas>
+            </div>
+            <p class="timestamp">更新时间: <span id="lastUpdate"></span></p>
+        </div>
+
+        <div class="footer">
+            <p>电赛资产库测试仪表板 v1.0 | 自动化测试监控系统</p>
+        </div>
+    </div>
+
+    <script>
+        // 示例数据（实际应用中从JSON文件加载）
+        const testData = {
+            total: 98,
+            passed: 92,
+            failed: 3,
+            skipped: 3,
+            coverage: {
+                pid: 95,
+                visual: 90,
+                sensor: 92,
+                advanced: 88,
+                benchmark: 100
+            },
+            benchmarks: [
+                { name: 'PID计算性能', time: '15ms', status: 'passed', threshold: '<20ms' },
+                { name: '卡尔曼滤波性能', time: '22ms', status: 'passed', threshold: '<30ms' },
+                { name: '视觉检测性能', time: '28ms', status: 'passed', threshold: '<50ms' },
+                { name: '内存占用基准', time: '2.1MB', status: 'passed', threshold: '<3MB' },
+                { name: '实时响应时间', time: '18ms', status: 'passed', threshold: '<25ms' }
+            ],
+            history: [
+                { date: '2024-01', tests: 80, passed: 76 },
+                { date: '2024-02', tests: 85, passed: 81 },
+                { date: '2024-03', tests: 90, passed: 86 },
+                { date: '2024-04', tests: 95, passed: 91 },
+                { date: '2024-05', tests: 98, passed: 92 }
+            ]
+        };
+
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testData.total;
+            document.getElementById('passedTests').textContent = testData.passed;
+            document.getElementById('failedTests').textContent = testData.failed;
+            document.getElementById('skippedTests').textContent = testData.skipped;
+        }
+
+        // 更新覆盖率进度条
+        function updateCoverage() {
+            const coverageItems = [
+                { id: 'pid', element: 'pidCoverage', progress: 'pidProgress', value: testData.coverage.pid },
+                { id: 'visual', element: 'visualCoverage', progress: 'visualProgress', value: testData.coverage.visual },
+                { id: 'sensor', element: 'sensorCoverage', progress: 'sensorProgress', value: testData.coverage.sensor },
+                { id: 'advanced', element: 'advancedCoverage', progress: 'advancedProgress', value: testData.coverage.advanced },
+                { id: 'benchmark', element: 'benchmarkCoverage', progress: 'benchmarkProgress', value: testData.coverage.benchmark }
+            ];
+
+            coverageItems.forEach(item => {
+                document.getElementById(item.element).textContent = item.value + '%';
+                document.getElementById(item.progress).style.width = item.value + '%';
+            });
+        }
+
+        // 创建模块覆盖率柱状图
+        function createCoverageChart() {
+            const ctx = document.getElementById('coverageChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PID控制', '视觉处理', '传感器数据', '高级控制', '性能基准'],
+                    datasets: [{
+                        label: '覆盖率 (%)',
+                        data: [
+                            testData.coverage.pid,
+                            testData.coverage.visual,
+                            testData.coverage.sensor,
+                            testData.coverage.advanced,
+                            testData.coverage.benchmark
+                        ],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 创建测试状态饼图
+        function createStatusChart() {
+            const ctx = document.getElementById('testStatusChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['通过', '失败', '跳过'],
+                    datasets: [{
+                        data: [testData.passed, testData.failed, testData.skipped],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.8)',
+                            'rgba(220, 53, 69, 0.8)',
+                            'rgba(255, 193, 7, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(40, 167, 69, 1)',
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(255, 193, 7, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 创建历史趋势图
+        function createHistoryChart() {
+            const ctx = document.getElementById('historyChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: testData.history.map(h => h.date),
+                    datasets: [
+                        {
+                            label: '总测试数',
+                            data: testData.history.map(h => h.tests),
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: '通过数',
+                            data: testData.history.map(h => h.passed),
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // 填充基准测试表格
+        function fillBenchmarkTable() {
+            const tbody = document.getElementById('benchmarkBody');
+            tbody.innerHTML = '';
+
+            testData.benchmarks.forEach(benchmark => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${benchmark.name}</td>
+                    <td>${benchmark.time}</td>
+                    <td><span class="status-badge ${benchmark.status}">${benchmark.status.toUpperCase()}</span></td>
+                    <td>${benchmark.threshold}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString('zh-CN');
+        }
+
+        // 初始化仪表板
+        function initDashboard() {
+            updateStats();
+            updateCoverage();
+            createCoverageChart();
+            createStatusChart();
+            createHistoryChart();
+            fillBenchmarkTable();
+            updateTimestamp();
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // 模拟实时更新（每30秒刷新一次）
+        setInterval(() => {
+            // 实际应用中这里会从服务器获取最新数据
+            updateTimestamp();
+        }, 30000);
+    </script>
+</body>
+</html>

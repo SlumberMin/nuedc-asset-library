@@ -1,0 +1,366 @@
+/**
+ * @file    oled.c
+ * @brief   OLED显示模块实现
+ * @details SSD1306 128×64 I2C OLED驱动。
+ *          内部维护128×64显存缓冲区(1024字节)，
+ *          所有绘制操作修改缓冲区，调用OLED_Refresh刷新到屏幕。
+ */
+
+#include "drivers/oled.h"
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+
+/* ========================================================================== */
+/*                              内部数据                                       */
+/* ========================================================================== */
+
+/** @brief SSD1306 I2C命令前缀 */
+#define OLED_CMD    0x00
+/** @brief SSD1306 I2C数据前缀 */
+#define OLED_DATA   0x40
+
+/** @brief 显存缓冲区 128×64 / 8 = 1024字节 */
+static uint8_t oled_buffer[OLED_WIDTH * OLED_HEIGHT / 8];
+
+/**
+ * @brief 6×8 ASCII字库（ASCII 32~126）
+ * @note  每个字符6字节，列扫描格式，低位在上
+ */
+static const uint8_t font_6x8[][6] = {
+    {0x00,0x00,0x00,0x00,0x00,0x00}, /* 空格 */
+    {0x00,0x00,0x5F,0x00,0x00,0x00}, /* ! */
+    {0x00,0x07,0x00,0x07,0x00,0x00}, /* " */
+    {0x14,0x7F,0x14,0x7F,0x14,0x00}, /* # */
+    {0x24,0x2A,0x7F,0x2A,0x12,0x00}, /* $ */
+    {0x23,0x13,0x08,0x64,0x62,0x00}, /* % */
+    {0x36,0x49,0x55,0x22,0x50,0x00}, /* & */
+    {0x00,0x05,0x03,0x00,0x00,0x00}, /* ' */
+    {0x00,0x1C,0x22,0x41,0x00,0x00}, /* ( */
+    {0x00,0x41,0x22,0x1C,0x00,0x00}, /* ) */
+    {0x08,0x2A,0x1C,0x2A,0x08,0x00}, /* * */
+    {0x08,0x08,0x3E,0x08,0x08,0x00}, /* + */
+    {0x00,0x50,0x30,0x00,0x00,0x00}, /* , */
+    {0x08,0x08,0x08,0x08,0x08,0x00}, /* - */
+    {0x00,0x60,0x60,0x00,0x00,0x00}, /* . */
+    {0x20,0x10,0x08,0x04,0x02,0x00}, /* / */
+    {0x3E,0x51,0x49,0x45,0x3E,0x00}, /* 0 */
+    {0x00,0x42,0x7F,0x40,0x00,0x00}, /* 1 */
+    {0x42,0x61,0x51,0x49,0x46,0x00}, /* 2 */
+    {0x21,0x41,0x45,0x4B,0x31,0x00}, /* 3 */
+    {0x18,0x14,0x12,0x7F,0x10,0x00}, /* 4 */
+    {0x27,0x45,0x45,0x45,0x39,0x00}, /* 5 */
+    {0x3C,0x4A,0x49,0x49,0x30,0x00}, /* 6 */
+    {0x01,0x71,0x09,0x05,0x03,0x00}, /* 7 */
+    {0x36,0x49,0x49,0x49,0x36,0x00}, /* 8 */
+    {0x06,0x49,0x49,0x29,0x1E,0x00}, /* 9 */
+    {0x00,0x36,0x36,0x00,0x00,0x00}, /* : */
+    {0x00,0x56,0x36,0x00,0x00,0x00}, /* ; */
+    {0x00,0x08,0x14,0x22,0x41,0x00}, /* < */
+    {0x14,0x14,0x14,0x14,0x14,0x00}, /* = */
+    {0x41,0x22,0x14,0x08,0x00,0x00}, /* > */
+    {0x02,0x01,0x51,0x09,0x06,0x00}, /* ? */
+    {0x32,0x49,0x79,0x41,0x3E,0x00}, /* @ */
+    {0x7E,0x11,0x11,0x11,0x7E,0x00}, /* A */
+    {0x7F,0x49,0x49,0x49,0x36,0x00}, /* B */
+    {0x3E,0x41,0x41,0x41,0x22,0x00}, /* C */
+    {0x7F,0x41,0x41,0x22,0x1C,0x00}, /* D */
+    {0x7F,0x49,0x49,0x49,0x41,0x00}, /* E */
+    {0x7F,0x09,0x09,0x01,0x01,0x00}, /* F */
+    {0x3E,0x41,0x41,0x51,0x32,0x00}, /* G */
+    {0x7F,0x08,0x08,0x08,0x7F,0x00}, /* H */
+    {0x00,0x41,0x7F,0x41,0x00,0x00}, /* I */
+    {0x20,0x40,0x41,0x3F,0x01,0x00}, /* J */
+    {0x7F,0x08,0x14,0x22,0x41,0x00}, /* K */
+    {0x7F,0x40,0x40,0x40,0x40,0x00}, /* L */
+    {0x7F,0x02,0x04,0x02,0x7F,0x00}, /* M */
+    {0x7F,0x04,0x08,0x10,0x7F,0x00}, /* N */
+    {0x3E,0x41,0x41,0x41,0x3E,0x00}, /* O */
+    {0x7F,0x09,0x09,0x09,0x06,0x00}, /* P */
+    {0x3E,0x41,0x51,0x21,0x5E,0x00}, /* Q */
+    {0x7F,0x09,0x19,0x29,0x46,0x00}, /* R */
+    {0x46,0x49,0x49,0x49,0x31,0x00}, /* S */
+    {0x01,0x01,0x7F,0x01,0x01,0x00}, /* T */
+    {0x3F,0x40,0x40,0x40,0x3F,0x00}, /* U */
+    {0x1F,0x20,0x40,0x20,0x1F,0x00}, /* V */
+    {0x7F,0x20,0x18,0x20,0x7F,0x00}, /* W */
+    {0x63,0x14,0x08,0x14,0x63,0x00}, /* X */
+    {0x03,0x04,0x78,0x04,0x03,0x00}, /* Y */
+    {0x61,0x51,0x49,0x45,0x43,0x00}, /* Z */
+    {0x00,0x00,0x7F,0x41,0x41,0x00}, /* [ */
+    {0x02,0x04,0x08,0x10,0x20,0x00}, /* \ */
+    {0x41,0x41,0x7F,0x00,0x00,0x00}, /* ] */
+    {0x04,0x02,0x01,0x02,0x04,0x00}, /* ^ */
+    {0x40,0x40,0x40,0x40,0x40,0x00}, /* _ */
+    {0x00,0x01,0x02,0x04,0x00,0x00}, /* ` */
+    {0x20,0x54,0x54,0x54,0x78,0x00}, /* a */
+    {0x7F,0x48,0x44,0x44,0x38,0x00}, /* b */
+    {0x38,0x44,0x44,0x44,0x20,0x00}, /* c */
+    {0x38,0x44,0x44,0x48,0x7F,0x00}, /* d */
+    {0x38,0x54,0x54,0x54,0x18,0x00}, /* e */
+    {0x08,0x7E,0x09,0x01,0x02,0x00}, /* f */
+    {0x08,0x14,0x54,0x54,0x3C,0x00}, /* g */
+    {0x7F,0x08,0x04,0x04,0x78,0x00}, /* h */
+    {0x00,0x44,0x7D,0x40,0x00,0x00}, /* i */
+    {0x20,0x40,0x44,0x3D,0x00,0x00}, /* j */
+    {0x00,0x7F,0x10,0x28,0x44,0x00}, /* k */
+    {0x00,0x41,0x7F,0x40,0x00,0x00}, /* l */
+    {0x7C,0x04,0x18,0x04,0x78,0x00}, /* m */
+    {0x7C,0x08,0x04,0x04,0x78,0x00}, /* n */
+    {0x38,0x44,0x44,0x44,0x38,0x00}, /* o */
+    {0x7C,0x14,0x14,0x14,0x08,0x00}, /* p */
+    {0x08,0x14,0x14,0x18,0x7C,0x00}, /* q */
+    {0x7C,0x08,0x04,0x04,0x08,0x00}, /* r */
+    {0x48,0x54,0x54,0x54,0x20,0x00}, /* s */
+    {0x04,0x3F,0x44,0x40,0x20,0x00}, /* t */
+    {0x3C,0x40,0x40,0x20,0x7C,0x00}, /* u */
+    {0x1C,0x20,0x40,0x20,0x1C,0x00}, /* v */
+    {0x3C,0x40,0x30,0x40,0x3C,0x00}, /* w */
+    {0x44,0x28,0x10,0x28,0x44,0x00}, /* x */
+    {0x0C,0x50,0x50,0x50,0x3C,0x00}, /* y */
+    {0x44,0x64,0x54,0x4C,0x44,0x00}, /* z */
+    {0x00,0x08,0x36,0x41,0x00,0x00}, /* { */
+    {0x00,0x00,0x7F,0x00,0x00,0x00}, /* | */
+    {0x00,0x41,0x36,0x08,0x00,0x00}, /* } */
+    {0x08,0x08,0x2A,0x1C,0x08,0x00}, /* ~ */
+};
+
+/* ========================================================================== */
+/*                              内部函数                                       */
+/* ========================================================================== */
+
+/**
+ * @brief 向SSD1306发送命令（内部函数）
+ * @param oled  OLED结构体指针
+ * @param cmd   命令字节
+ */
+static void OLED_WriteCmd(OLED_t *oled, uint8_t cmd)
+{
+    uint8_t buf[2] = {OLED_CMD, cmd};
+    HAL_I2C_Master_Transmit(oled->hi2c, (oled->i2c_addr << 1), buf, 2, 10);
+}
+
+/**
+ * @brief 向SSD1306发送数据（内部函数）
+ * @param oled  OLED结构体指针
+ * @param data  数据指针
+ * @param len   数据长度
+ */
+static void OLED_WriteData(OLED_t *oled, const uint8_t *data, uint16_t len)
+{
+    /* 分批发送，每批1字节命令前缀 + 16字节数据 */
+    uint8_t buf[17];
+    while (len > 0) {
+        uint16_t chunk = (len > 16) ? 16 : len;
+        buf[0] = OLED_DATA;
+        memcpy(&buf[1], data, chunk);
+        HAL_I2C_Master_Transmit(oled->hi2c, (oled->i2c_addr << 1), buf, chunk + 1, 10);
+        data += chunk;
+        len  -= chunk;
+    }
+}
+
+/* ========================================================================== */
+/*                              接口函数实现                                   */
+/* ========================================================================== */
+
+ErrorCode_t OLED_Init(OLED_t *oled, I2C_HandleTypeDef *hi2c, uint16_t addr)
+{
+    if (oled == NULL || hi2c == NULL) {
+        return HAL_ERR_PARAM;
+    }
+
+    oled->hi2c      = hi2c;
+    oled->i2c_addr  = addr;
+    oled->initialized = false;
+
+    HAL_Delay(100); /* 等待OLED上电稳定 */
+
+    /* SSD1306初始化序列 */
+    OLED_WriteCmd(oled, 0xAE); /* 关闭显示 */
+    OLED_WriteCmd(oled, 0x20); /* 设置内存寻址模式 */
+    OLED_WriteCmd(oled, 0x10); /* 页寻址模式 */
+    OLED_WriteCmd(oled, 0xB0); /* 设置页起始地址 */
+    OLED_WriteCmd(oled, 0xC8); /* COM扫描方向：从下到上 */
+    OLED_WriteCmd(oled, 0x00); /* 列低位地址 */
+    OLED_WriteCmd(oled, 0x10); /* 列高位地址 */
+    OLED_WriteCmd(oled, 0x40); /* 设置起始行 */
+    OLED_WriteCmd(oled, 0x81); /* 设置对比度 */
+    OLED_WriteCmd(oled, 0xCF); /* 对比度值 */
+    OLED_WriteCmd(oled, 0xA1); /* 段重映射：左右反转 */
+    OLED_WriteCmd(oled, 0xA6); /* 正常显示(非反色) */
+    OLED_WriteCmd(oled, 0xA8); /* 设置多路复用率 */
+    OLED_WriteCmd(oled, 0x3F); /* 1/64 duty */
+    OLED_WriteCmd(oled, 0xA4); /* 全局显示开启 */
+    OLED_WriteCmd(oled, 0xD3); /* 设置显示偏移 */
+    OLED_WriteCmd(oled, 0x00); /* 无偏移 */
+    OLED_WriteCmd(oled, 0xD5); /* 设置时钟分频 */
+    OLED_WriteCmd(oled, 0x80); /* 默认值 */
+    OLED_WriteCmd(oled, 0xD9); /* 设置预充电周期 */
+    OLED_WriteCmd(oled, 0xF1); /* */
+    OLED_WriteCmd(oled, 0xDA); /* 设置COM引脚配置 */
+    OLED_WriteCmd(oled, 0x12); /* */
+    OLED_WriteCmd(oled, 0xDB); /* 设置VCOMH取消选择电平 */
+    OLED_WriteCmd(oled, 0x40); /* */
+    OLED_WriteCmd(oled, 0x8D); /* 设置电荷泵 */
+    OLED_WriteCmd(oled, 0x14); /* 启用电荷泵 */
+    OLED_WriteCmd(oled, 0xAF); /* 开启显示 */
+
+    /* 清屏 */
+    OLED_Clear(oled);
+
+    oled->initialized = true;
+
+    DBG_PRINTF("OLED init OK: addr=0x%02X", addr);
+
+    return HAL_OK_CODE;
+}
+
+ErrorCode_t OLED_Clear(OLED_t *oled)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+
+    memset(oled_buffer, 0x00, sizeof(oled_buffer));
+    return OLED_Refresh(oled);
+}
+
+ErrorCode_t OLED_SetCursor(OLED_t *oled, uint8_t x, uint8_t y)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+    if (x > 20 || y > 7) return HAL_ERR_PARAM;
+
+    OLED_WriteCmd(oled, 0xB0 + y);                     /* 页地址 */
+    OLED_WriteCmd(oled, 0x00 + ((x * 6) & 0x0F));      /* 列低位 */
+    OLED_WriteCmd(oled, 0x10 + (((x * 6) >> 4) & 0x0F)); /* 列高位 */
+
+    return HAL_OK_CODE;
+}
+
+ErrorCode_t OLED_ShowChar(OLED_t *oled, char ch, uint8_t x, uint8_t y)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+    if (ch < 32 || ch > 126) return HAL_ERR_PARAM;
+    if (x > 122 || y > 56) return HAL_ERR_PARAM;
+
+    uint8_t idx = (uint8_t)(ch - 32);
+    uint16_t buf_offset = (y / 8) * OLED_WIDTH + x;
+
+    for (uint8_t i = 0; i < 6; i++) {
+        if (buf_offset + i < sizeof(oled_buffer)) {
+            oled_buffer[buf_offset + i] = font_6x8[idx][i];
+        }
+    }
+
+    /* 局部刷新：设置光标后写入6字节 */
+    OLED_WriteCmd(oled, 0xB0 + (y / 8));
+    OLED_WriteCmd(oled, 0x00 + (x & 0x0F));
+    OLED_WriteCmd(oled, 0x10 + ((x >> 4) & 0x0F));
+    OLED_WriteData(oled, &oled_buffer[buf_offset], 6);
+
+    return HAL_OK_CODE;
+}
+
+ErrorCode_t OLED_ShowString(OLED_t *oled, const char *str, uint8_t x, uint8_t y)
+{
+    if (oled == NULL || str == NULL) return HAL_ERR_PARAM;
+
+    uint8_t col = x;
+    while (*str && col <= 20) {
+        OLED_ShowChar(oled, *str, col * 6, y * 8);
+        str++;
+        col++;
+    }
+
+    return HAL_OK_CODE;
+}
+
+ErrorCode_t OLED_ShowInt(OLED_t *oled, int32_t num, uint8_t x, uint8_t y)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+
+    char buf[12];
+    snprintf(buf, sizeof(buf), "%ld", (long)num);
+    return OLED_ShowString(oled, buf, x, y);
+}
+
+ErrorCode_t OLED_ShowFloat(OLED_t *oled, float num, uint8_t decimals, uint8_t x, uint8_t y)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+
+    char buf[16];
+    char fmt[8];
+    snprintf(fmt, sizeof(fmt), "%%.%uf", decimals);
+    snprintf(buf, sizeof(buf), fmt, num);
+    return OLED_ShowString(oled, buf, x, y);
+}
+
+ErrorCode_t OLED_DrawPoint(OLED_t *oled, uint8_t x, uint8_t y)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+    if (x >= OLED_WIDTH || y >= OLED_HEIGHT) return HAL_ERR_PARAM;
+
+    uint16_t byte_idx = (y / 8) * OLED_WIDTH + x;
+    uint8_t  bit_idx  = y % 8;
+    oled_buffer[byte_idx] |= (1 << bit_idx);
+
+    /* 局部刷新该字节 */
+    uint8_t col = x;
+    OLED_WriteCmd(oled, 0xB0 + (y / 8));
+    OLED_WriteCmd(oled, 0x00 + (col & 0x0F));
+    OLED_WriteCmd(oled, 0x10 + ((col >> 4) & 0x0F));
+    OLED_WriteData(oled, &oled_buffer[byte_idx], 1);
+
+    return HAL_OK_CODE;
+}
+
+ErrorCode_t OLED_DrawLine(OLED_t *oled, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+
+    /* Bresenham画线算法 */
+    int16_t dx = (int16_t)ABS((int16_t)x2 - (int16_t)x1);
+    int16_t dy = (int16_t)ABS((int16_t)y2 - (int16_t)y1);
+    int16_t sx = (x1 < x2) ? 1 : -1;
+    int16_t sy = (y1 < y2) ? 1 : -1;
+    int16_t err = dx - dy;
+
+    while (1) {
+        OLED_DrawPoint(oled, x1, y1);
+        if (x1 == x2 && y1 == y2) break;
+        int16_t e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x1 = (uint8_t)((int16_t)x1 + sx); }
+        if (e2 <  dx) { err += dx; y1 = (uint8_t)((int16_t)y1 + sy); }
+    }
+
+    return HAL_OK_CODE;
+}
+
+ErrorCode_t OLED_DrawRect(OLED_t *oled, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+
+    OLED_DrawLine(oled, x, y, x + w - 1, y);
+    OLED_DrawLine(oled, x + w - 1, y, x + w - 1, y + h - 1);
+    OLED_DrawLine(oled, x + w - 1, y + h - 1, x, y + h - 1);
+    OLED_DrawLine(oled, x, y + h - 1, x, y);
+
+    return HAL_OK_CODE;
+}
+
+ErrorCode_t OLED_Refresh(OLED_t *oled)
+{
+    if (oled == NULL) return HAL_ERR_PARAM;
+
+    /* 设置页寻址范围 0~7，列范围 0~127 */
+    OLED_WriteCmd(oled, 0x22); /* 设置页地址范围 */
+    OLED_WriteCmd(oled, 0x00); /* 起始页 */
+    OLED_WriteCmd(oled, 0x07); /* 结束页 */
+    OLED_WriteCmd(oled, 0x21); /* 设置列地址范围 */
+    OLED_WriteCmd(oled, 0x00); /* 起始列 */
+    OLED_WriteCmd(oled, 0x7F); /* 结束列(127) */
+
+    /* 发送整块显存 */
+    OLED_WriteData(oled, oled_buffer, sizeof(oled_buffer));
+
+    return HAL_OK_CODE;
+}

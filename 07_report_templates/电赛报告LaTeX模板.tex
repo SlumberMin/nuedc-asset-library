@@ -1,0 +1,365 @@
+\documentclass[12pt,a4paper]{ctexart}
+
+% === 页面设置 ===
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% === 常用宏包 ===
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{circuitikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% === 代码高亮设置 ===
+\lstset{
+    language=C,
+    basicstyle=\small\ttfamily,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=false,
+    tabsize=4,
+    showstringspaces=false,
+    captionpos=b,
+    aboveskip=10pt,
+    belowskip=10pt
+}
+
+% === 页眉页脚 ===
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small 全国大学生电子设计竞赛}
+\fancyhead[R]{\small 设计报告}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% === 超链接设置 ===
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% === 图表编号格式 ===
+\renewcommand{\thefigure}{\thesection-\arabic{figure}}
+\renewcommand{\thetable}{\thesection-\arabic{table}}
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\makeatletter
+\@addreset{figure}{section}
+\@addreset{table}{section}
+\@addreset{equation}{section}
+\makeatother
+
+% ============================================================
+\begin{document}
+
+% === 封面 ===
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+
+{\Huge\bfseries 全国大学生电子设计竞赛\\[0.3cm]设计报告}
+
+\vspace{2cm}
+
+{\LARGE\bfseries 【此处填写赛题名称】}
+
+\vspace{1.5cm}
+
+\begin{tabular}{rl}
+{\large\bfseries 赛题编号：} & {\large \underline{\hspace{3cm}A题\hspace{3cm}}} \\[0.8cm]
+{\large\bfseries 参赛学校：} & {\large \underline{\hspace{5cm}}} \\[0.8cm]
+{\large\bfseries 队伍编号：} & {\large \underline{\hspace{5cm}}} \\[0.8cm]
+{\large\bfseries 队员一：} & {\large \underline{\hspace{4cm}}（签名）} \\[0.8cm]
+{\large\bfseries 队员二：} & {\large \underline{\hspace{4cm}}（签名）} \\[0.8cm]
+{\large\bfseries 队员三：} & {\large \underline{\hspace{4cm}}（签名）} \\
+\end{tabular}
+
+\vfill
+{\large 2025年\hspace{1cm}月\hspace{1cm}日}
+\end{titlepage}
+
+% === 目录 ===
+\newpage
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{系统方案论证}
+
+\subsection{题目分析}
+
+【在此分析赛题要求，列出基本要求和发挥部分，明确设计目标】
+
+本题要求设计一个【简要描述系统功能】，主要技术指标如下：
+
+\begin{table}[H]
+\centering
+\caption{主要技术指标}
+\begin{tabular}{lll}
+\toprule
+\textbf{指标项} & \textbf{基本要求} & \textbf{发挥部分} \\
+\midrule
+指标1 & 值 & 值 \\
+指标2 & 值 & 值 \\
+指标3 & 值 & 值 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{方案比较与选择}
+
+\subsubsection{方案一：【方案名称】}
+
+【描述方案原理、优缺点】
+
+\subsubsection{方案二：【方案名称】}
+
+【描述方案原理、优缺点】
+
+\subsubsection{方案选择}
+
+综合比较两种方案，选择方案【X】。理由如下：
+\begin{enumerate}[label=(\arabic*)]
+    \item 理由一
+    \item 理由二
+    \item 理由三
+\end{enumerate}
+
+% ============================================================
+\section{理论分析与计算}
+
+\subsection{【模块1理论分析】}
+
+【在此进行必要的理论推导和参数计算】
+
+关键公式如下：
+\begin{equation}
+    V_{out} = V_{in} \times \frac{R_2}{R_1 + R_2}
+    \label{eq:voltage_divider}
+\end{equation}
+
+其中$V_{in}$为输入电压，$R_1$、$R_2$为分压电阻。
+
+\subsection{【模块2理论分析】}
+
+【理论推导内容】
+
+\subsection{参数计算}
+
+根据上述理论分析，计算关键参数：
+
+\begin{table}[H]
+\centering
+\caption{关键参数计算结果}
+\begin{tabular}{lll}
+\toprule
+\textbf{参数} & \textbf{计算值} & \textbf{实际取值} \\
+\midrule
+参数1 & 计算值 & 实际值 \\
+参数2 & 计算值 & 实际值 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{电路与程序设计}
+
+\subsection{系统总体框图}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[block/.style={draw, rectangle, minimum width=2.5cm, minimum height=1cm, align=center}]
+    \node[block] (input) at (0,0) {输入\\调理};
+    \node[block] (adc) at (3.5,0) {ADC\\采样};
+    \node[block] (mcu) at (7,0) {MCU\\处理};
+    \node[block] (dac) at (10.5,0) {DAC\\输出};
+    \node[block] (output) at (14,0) {功率\\驱动};
+    
+    \draw[->] (input) -- (adc);
+    \draw[->] (adc) -- (mcu);
+    \draw[->] (mcu) -- (dac);
+    \draw[->] (dac) -- (output);
+\end{tikzpicture}
+\caption{系统总体框图}
+\label{fig:system_block}
+\end{figure}
+
+\subsection{硬件电路设计}
+
+\subsubsection{【电路模块1】}
+
+【电路设计说明，可插入原理图】
+
+\begin{figure}[H]
+\centering
+% \includegraphics[width=0.8\textwidth]{schematic_module1.png}
+\caption{【电路模块1】原理图}
+\label{fig:circuit1}
+\end{figure}
+
+\subsubsection{【电路模块2】}
+
+【电路设计说明】
+
+\subsection{软件设计}
+
+\subsubsection{程序总体流程}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm,
+    startstop/.style={draw, rounded rectangle, minimum width=2cm, align=center},
+    process/.style={draw, rectangle, minimum width=2cm, minimum height=0.8cm, align=center},
+    decision/.style={draw, diamond, minimum width=1.5cm, align=center}]
+    
+    \node[startstop] (init) {系统初始化};
+    \node[process, below=of init] (read) {读取传感器};
+    \node[process, below=of read] (process) {数据处理};
+    \node[process, below=of process] (output) {输出控制};
+    \node[decision, below=of output] (check) {是否停止？};
+    
+    \draw[->] (init) -- (read);
+    \draw[->] (read) -- (process);
+    \draw[->] (process) -- (output);
+    \draw[->] (output) -- (check);
+    \draw[->] (check) -| node[anchor=south] {否} ++(3,0) |- (read);
+    \draw[->] (check) -- node[anchor=east] {是} ++(0,-1) node[below] {结束};
+\end{tikzpicture}
+\caption{主程序流程图}
+\label{fig:flowchart}
+\end{figure}
+
+\subsubsection{关键代码}
+
+\begin{lstlisting}[caption={关键算法实现}, label={lst:key_code}]
+/* 关键代码示例 */
+void System_Process(void) {
+    // 读取ADC
+    uint16_t adc_val = ADC_Read();
+    
+    // 数据处理
+    float result = Algorithm_Process(adc_val);
+    
+    // 输出
+    DAC_Output(result);
+}
+\end{lstlisting}
+
+% ============================================================
+\section{测试方案与测试结果}
+
+\subsection{测试仪器}
+
+\begin{table}[H]
+\centering
+\caption{测试仪器列表}
+\begin{tabular}{lll}
+\toprule
+\textbf{仪器名称} & \textbf{型号} & \textbf{主要参数} \\
+\midrule
+数字示波器 & Tektronix TDS2022 & 200MHz, 2GS/s \\
+信号发生器 & AFG3022 & 25MHz, 双通道 \\
+数字万用表 & Fluke 17B & 4000字 \\
+直流稳压电源 & \text{-} & 0\textasciitilde 30V, 5A \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{测试方案}
+
+【描述测试方法和步骤】
+
+\subsection{测试数据}
+
+\begin{table}[H]
+\centering
+\caption{【测试项目1】测试数据}
+\begin{tabular}{cccc}
+\toprule
+\textbf{输入} & \textbf{理论值} & \textbf{实测值} & \textbf{误差} \\
+\midrule
+1 & 1.00 & 0.99 & 1.0\% \\
+2 & 2.00 & 2.01 & 0.5\% \\
+3 & 3.00 & 2.98 & 0.7\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{测试结果分析}
+
+\begin{itemize}
+    \item 基本要求完成情况：【逐条说明】
+    \item 发挥部分完成情况：【逐条说明】
+    \item 测试结论：【总结性评价】
+\end{itemize}
+
+% ============================================================
+\section{总结}
+
+\subsection{系统特点}
+
+\begin{enumerate}
+    \item 特点一
+    \item 特点二
+    \item 特点三
+\end{enumerate}
+
+\subsection{不足与改进}
+
+\begin{enumerate}
+    \item 不足一及改进方向
+    \item 不足二及改进方向
+\end{enumerate}
+
+% ============================================================
+\section*{参考文献}
+\begin{enumerate}[label={[\arabic*]}]
+    \item 参考文献1
+    \item 参考文献2
+    \item 参考文献3
+\end{enumerate}
+
+% === 附录 ===
+\appendix
+\section{完整电路原理图}
+
+% \includegraphics[width=\textwidth]{full_schematic.png}
+
+\section{完整程序代码}
+
+\begin{lstlisting}[language=C, caption={main.c}]
+/* 完整主程序代码 */
+#include "stm32f10x.h"
+
+int main(void) {
+    SystemInit();
+    // ... 完整代码
+    while(1) {
+        // 主循环
+    }
+}
+\end{lstlisting}
+
+\end{document}

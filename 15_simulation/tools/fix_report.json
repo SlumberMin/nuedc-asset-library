@@ -1,0 +1,113 @@
+{
+  "scan_time": "2026-06-12 01:55:20",
+  "scan_root": "D:\\Users\\Lie\\Desktop\\电赛\\电赛综合资产库\\15_仿真与验证",
+  "total_c_files": 0,
+  "total_py_files": 31,
+  "total_findings": 10,
+  "critical": 0,
+  "warning": 10,
+  "info": 0,
+  "auto_fixed": 0,
+  "findings": [
+    {
+      "rule_id": "E36",
+      "rule_name": "函数内重复import",
+      "severity": "warning",
+      "file": "advanced_algorithms_comparison.py",
+      "line": 26,
+      "message": "函数内`import matplotlib`与顶层重复，可能导致UnboundLocalError",
+      "auto_fixable": false,
+      "fixed": false
+    },
+    {
+      "rule_id": "E37",
+      "rule_name": "numpy旧API",
+      "severity": "warning",
+      "file": "encoder_velocity_estimation.py",
+      "line": 57,
+      "message": "`np.int` 在numpy 2.x中已移除，替代为`int (builtin)`",
+      "auto_fixable": true,
+      "fixed": false
+    },
+    {
+      "rule_id": "E36",
+      "rule_name": "函数内重复import",
+      "severity": "warning",
+      "file": "ilc_repetitive_task.py",
+      "line": 18,
+      "message": "函数内`import matplotlib`与顶层重复，可能导致UnboundLocalError",
+      "auto_fixable": false,
+      "fixed": false
+    },
+    {
+      "rule_id": "E36",
+      "rule_name": "函数内重复import",
+      "severity": "warning",
+      "file": "ilc_repetitive_task.py",
+      "line": 19,
+      "message": "函数内`import matplotlib`与顶层重复，可能导致UnboundLocalError",
+      "auto_fixable": false,
+      "fixed": false
+    },
+    {
+      "rule_id": "E36",
+      "rule_name": "函数内重复import",
+      "severity": "warning",
+      "file": "lqr_inverted_pendulum.py",
+      "line": 17,
+      "message": "函数内`import matplotlib`与顶层重复，可能导致UnboundLocalError",
+      "auto_fixable": false,
+      "fixed": false
+    },
+    {
+      "rule_id": "E30",
+      "rule_name": "条件导入库未守卫使用",
+      "severity": "warning",
+      "file": "motor_identification.py",
+      "line": 34,
+      "message": "条件导入的numpy在守卫外直接使用，未导入时将NameError",
+      "auto_fixable": false,
+      "fixed": false
+    },
+    {
+      "rule_id": "E36",
+      "rule_name": "函数内重复import",
+      "severity": "warning",
+      "file": "mpc_trajectory_tracking.py",
+      "line": 17,
+      "message": "函数内`import matplotlib`与顶层重复，可能导致UnboundLocalError",
+      "auto_fixable": false,
+      "fixed": false
+    },
+    {
+      "rule_id": "E36",
+      "rule_name": "函数内重复import",
+      "severity": "warning",
+      "file": "neural_pid_learning.py",
+      "line": 17,
+      "message": "函数内`import matplotlib`与顶层重复，可能导致UnboundLocalError",
+      "auto_fixable": false,
+      "fixed": false
+    },
+    {
+      "rule_id": "E37",
+      "rule_name": "numpy旧API",
+      "severity": "warning",
+      "file": "path_tracking_comparison.py",
+      "line": 277,
+      "message": "`np.int` 在numpy 2.x中已移除，替代为`int (builtin)`",
+      "auto_fixable": true,
+      "fixed": false
+    },
+    {
+      "rule_id": "E36",
+      "rule_name": "函数内重复import",
+      "severity": "warning",
+      "file": "smc_robustness_simulation.py",
+      "line": 18,
+      "message": "函数内`import matplotlib`与顶层重复，可能导致UnboundLocalError",
+      "auto_fixable": false,
+      "fixed": false
+    }
+  ]
+}

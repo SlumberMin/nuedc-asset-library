@@ -1,0 +1,91 @@
+/**
+ * SysConfig 配置 — L298N 双路电机驱动测试
+ *
+ * 设备: MSPM0G350X (LQFP-64)
+ *
+ * 引脚分配:
+ *   L298N: PA4=IN1, PA5=IN2, PA6=IN3, PA7=IN4
+ *   PWM:   TIMA0 CH0(PA8)=ENA, TIMA0 CH1(PA9)=ENB
+ *   UART:  PA10=TX, PA11=RX
+ *   LED:   PB22
+ */
+
+//@cliArgs --device "MSPM0G350X" --part "Default" --package "LQFP-64(PM)"
+//@v2CliArgs --device "MSPM0G3507" --package "LQFP-64(PM)"
+
+const GPIO   = scripting.addModule("/ti/driverlib/GPIO", {}, false);
+const PWM    = scripting.addModule("/ti/driverlib/PWM", {}, false);
+const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
+const TIMER  = scripting.addModule("/ti/driverlib/TIMER", {}, false);
+const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
+
+// ============================================================
+// GPIO — L298N 方向控制 (PA4~PA7)
+// ============================================================
+const GPIO_L298N = GPIO.addInstance();
+GPIO_L298N.$name = "L298N";
+GPIO_L298N.associatedPins.create(4);
+GPIO_L298N.associatedPins[0].$name       = "IN1";
+GPIO_L298N.associatedPins[0].pin.$assign  = "PA4";
+GPIO_L298N.associatedPins[1].$name       = "IN2";
+GPIO_L298N.associatedPins[1].pin.$assign  = "PA5";
+GPIO_L298N.associatedPins[2].$name       = "IN3";
+GPIO_L298N.associatedPins[2].pin.$assign  = "PA6";
+GPIO_L298N.associatedPins[3].$name       = "IN4";
+GPIO_L298N.associatedPins[3].pin.$assign  = "PA7";
+
+// ============================================================
+// GPIO — 板载LED (PB22)
+// ============================================================
+const GPIO_LED = GPIO.addInstance();
+GPIO_LED.$name = "LED";
+GPIO_LED.associatedPins.create(1);
+GPIO_LED.associatedPins[0].$name = "PIN";
+GPIO_LED.associatedPins[0].pin.$assign = "PB22";
+
+// ============================================================
+// PWM — L298N 使能 (TIMA0, 20kHz)
+// ============================================================
+const PWM_MOTOR = PWM.addInstance();
+PWM_MOTOR.$name = "PWM_0";
+PWM_MOTOR.timerStartTimer = true;
+PWM_MOTOR.timerCount = 4000;     // 80MHz/4000 = 20kHz
+PWM_MOTOR.clockDivider = 1;
+PWM_MOTOR.ccIndex = [0, 1];      // CH0=ENA, CH1=ENB
+PWM_MOTOR.peripheral.$assign = "TIMA0";
+PWM_MOTOR.peripheral.ccp0Pin.$assign = "PA8";   // ENA
+PWM_MOTOR.peripheral.ccp1Pin.$assign = "PA9";   // ENB
+
+// ============================================================
+// Timer — 系统滴答 (TIMG0, 1ms周期中断)
+// ============================================================
+const TIMER_TICK = TIMER.addInstance();
+TIMER_TICK.$name = "TIMER_0";
+TIMER_TICK.timerMode = "PERIODIC";
+TIMER_TICK.timerStartTimer = true;
+TIMER_TICK.timerPeriod = "1 ms";
+TIMER_TICK.timerClkDiv = 1;
+TIMER_TICK.interrupts = ["ZERO"];
+TIMER_TICK.interruptPriority = "2";
+TIMER_TICK.peripheral.$assign = "TIMG0";
+
+// ============================================================
+// UART0 — 调试串口 (PA10=TX, PA11=RX, 115200)
+// ============================================================
+const UART_DBG = UART.addInstance();
+UART_DBG.$name = "UART_0";
+UART_DBG.targetBaudRate = 115200;
+UART_DBG.peripheral.$assign = "UART0";
+UART_DBG.peripheral.txPin.$assign = "PA10";
+UART_DBG.peripheral.rxPin.$assign = "PA11";
+
+// ============================================================
+// SYSCTL — 系统时钟
+// ============================================================
+SYSCTL.forceDefaultClkConfig = true;
+SYSCTL.clockTreeEn = true;
+
+// ============================================================
+// Board (必需)
+// ============================================================
+const Board = scripting.addModule("/ti/driverlib/Board", {}, false);
