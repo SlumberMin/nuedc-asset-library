@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.icons8.com/fluency/96/cpu.png" width="80" alt="logo"/>
+<img src=".github/logo.svg" width="80" alt="NUEDC Asset Library"/>
 
 # ⚡ NUEDC Asset Library
 
