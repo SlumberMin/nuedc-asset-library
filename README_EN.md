@@ -13,8 +13,8 @@
 
 [![release](https://img.shields.io/badge/release-v1.0.0-blue?style=flat-square&logo=github)](https://github.com/SlumberMin/nuedc-asset-library/releases)
 [![license](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
-[![platform](https://img.shields.io/badge/platform-STM32%20%7C%20MSPM0%20%7C%20TM4C-orange?style=flat-square)]()
-[![vision](https://img.shields.io/badge/vision-Orange%20Pi%205%20(RK3588S)-9cf?style=flat-square&logo=raspberrypi)]()
+[![platform](https://img.shields.io/badge/platform-STM32%20%7C%20MSPM0%20%7C%20TM4C%20%7C%20OPi5-orange?style=flat-square)]()
+[![vision](https://img.shields.io/badge/vision-NPU%20%7C%20GPU%20%7C%20RGA-9cf?style=flat-square&logo=opencv)]()
 
 [![files](https://img.shields.io/badge/files-1%2C966-purple?style=flat-square&logo=files)]()
 [![algorithms](https://img.shields.io/badge/algorithms-21-blueviolet?style=flat-square&logo=brain)]()
